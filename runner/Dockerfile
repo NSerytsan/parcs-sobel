@@ -1,5 +1,5 @@
 FROM lionell/parcs-py
 
-COPY master.py .
+COPY main.py .
 
-CMD ["python", "master.py"]
+CMD ["python", "main.py"]
