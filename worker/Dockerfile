@@ -1,4 +1,5 @@
 FROM lionell/parcs-py
-COPY img.png .
+
 COPY main.py .
+RUN pip install Pillow numpy
 CMD [ "python", "main.py" ]

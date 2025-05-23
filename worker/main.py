@@ -1,6 +1,7 @@
 from parcs.server import Service, serve
 from PIL import Image
 import numpy as np
+import logging
 
 class SobelWorker(Service):
     def sobel_filter(self, image):
@@ -29,18 +30,28 @@ class SobelWorker(Service):
         return Image.fromarray(G)
 
     def run(self):
-        image_path = self.args.get("image")
-        if not image_path:
-            return {"error": "No image path provided"}
+        logging.info(f'Started recieving data')
+        image_chunk, filt_x, filt_y, start_row, end_row = self.read_all()
+        logging.info(f'Recived!')
+        image_chunk = np.array(image_chunk)
+        filt_x = np.array(filt_x)
+        filt_y = np.array(filt_y)
 
-        try:
-            image = Image.open(image_path)
-            processed_image = self.sobel_filter(image)
-            output_path = f"processed_{image_path}"
-            processed_image.save(output_path)
-            return {"status": "success", "output": output_path}
-        except Exception as e:
-            return {"error": str(e)}
+        rows, cols = image_chunk.shape
+        result_x = np.zeros_like(image_chunk)
+        result_y = np.zeros_like(image_chunk)
+
+        for i in range(1, rows - 1):
+            for j in range(1, cols - 1):
+                region = image_chunk[i-1:i+2, j-1:j+2]
+                result_x[i, j] = np.sum(region * filt_x)
+                result_y[i, j] = np.sum(region * filt_y)
+
+        # Обрізаємо паддінг
+        result_x = result_x[1:1 + (end_row - start_row)]
+        result_y = result_y[1:1 + (end_row - start_row)]
+
+        self.send((result_x.tolist(), result_y.tolist()))
 
 if __name__ == "__main__":
-    serve(SobelWorker)
+    serve(SobelWorker())
