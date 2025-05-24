@@ -61,8 +61,9 @@ class SobelRunner(Runner):
             chunk, start_row, end_row = chunk_data
             t = self.engine.run("sirin027/sobel-worker:latest")
             logging.info(f'Started worker')
-            t.send_all(chunk.tolist(), sobel_x, sobel_y, start_row, end_row)
-            logging.info(f'Started sending tasks')
+            logging.info(f'Sending chunk of shape {np.array(chunk).shape}')
+            t.send_all(chunk.tolist(), sobel_x.tolist(), sobel_y.tolist(), start_row, end_row)
+            logging.info(f'tsk sent')
             tasks.append(t)
         #task = self.engine.run("sirin027/sobel-worker:latest")
         #task.send_all({"image": image_path})
@@ -81,7 +82,9 @@ class SobelRunner(Runner):
         sobel_combined = np.sqrt(sobel_x_result ** 2 + sobel_y_result ** 2)
         sobel_combined = (255 * sobel_combined / np.max(sobel_combined)).astype(np.uint8)
         final_image = Image.fromarray(sobel_combined)
-        final_image.save("sobel_combined.png")
+        final_image.save("output/sobel_combined.png")
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info(sobel_combined)
         logging.info(f'Saved filtered image to sobel_combined.png')
         logging.info(f"end time: {time.time() - start_time}")
 

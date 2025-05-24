@@ -31,7 +31,14 @@ class SobelWorker(Service):
 
     def run(self):
         logging.info(f'Started recieving data')
-        image_chunk, filt_x, filt_y, start_row, end_row = self.read_all()
+        #image_chunk, filt_x, filt_y, start_row, end_row = self.recv()
+        image_chunk = self.recv()
+        filt_x = self.recv()
+        filt_y = self.recv()
+        start_row = self.recv()
+        end_row = self.recv()
+        logging.info(f'Data received: chunk={np.array(image_chunk).shape}, fx={np.array(filt_x).shape}, fy={np.array(filt_y).shape}')
+
         logging.info(f'Recived!')
         image_chunk = np.array(image_chunk)
         filt_x = np.array(filt_x)
@@ -54,4 +61,5 @@ class SobelWorker(Service):
         self.send((result_x.tolist(), result_y.tolist()))
 
 if __name__ == "__main__":
+    logging.info(f'Started working')
     serve(SobelWorker())
