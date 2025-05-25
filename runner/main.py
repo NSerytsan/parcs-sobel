@@ -6,13 +6,6 @@ from PIL import Image
 import numpy as np
 
 
-
-
-def load_image(file_path):
-    with Image.open(file_path) as image:
-        image.load()
-    return image
-
 def split_image(image, num_parts):
     rows = image.shape[0]
     chunk_size = rows // num_parts
@@ -33,7 +26,7 @@ class SobelRunner(Runner):
 
     def run(self):
         #
-        image_file = os.environ.get('IMAGE_FILE', '/test.tif')
+        image_file = os.environ.get('IMAGE_FILE', '/img.jpg')
         p = int(os.environ.get('P', 3))
         logging.info(f'Loading image file {image_file}')
         #image = load_image(image_file)
@@ -65,10 +58,7 @@ class SobelRunner(Runner):
             t.send_all(chunk.tolist(), sobel_x.tolist(), sobel_y.tolist(), start_row, end_row)
             logging.info(f'tsk sent')
             tasks.append(t)
-        #task = self.engine.run("sirin027/sobel-worker:latest")
-        #task.send_all({"image": image_path})
-        #result = task.recv()
-        #task.shutdown()
+
         sobel_x_rows = []
         sobel_y_rows = []
         logging.info(f"Tasks sent successfully")
@@ -77,6 +67,9 @@ class SobelRunner(Runner):
             sobel_x_rows.extend(sobel_x_part)
             sobel_y_rows.extend(sobel_y_part)
             t.shutdown()
+
+        logging.info(f"end time: {time.time() - start_time}")
+
         sobel_x_result = np.array(sobel_x_rows)
         sobel_y_result = np.array(sobel_y_rows)
         sobel_combined = np.sqrt(sobel_x_result ** 2 + sobel_y_result ** 2)
@@ -86,7 +79,7 @@ class SobelRunner(Runner):
         logging.getLogger().setLevel(logging.INFO)
         logging.info(sobel_combined)
         logging.info(f'Saved filtered image to sobel_combined.png')
-        logging.info(f"end time: {time.time() - start_time}")
+
 
         #return result
 
